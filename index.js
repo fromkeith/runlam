@@ -75,6 +75,10 @@ async function package(directory, opt) {
     if (!opt || typeof opt === 'string') {
         opt = options(this) || {};
     }
+
+    const workDir = {
+        cwd: `./${directory}`,
+    };
     // clean build
     await promisify(rimraf)(`${workDir.cwd}/dist`);
 
@@ -87,9 +91,6 @@ async function package(directory, opt) {
             return;
         }
     }
-    const workDir = {
-        cwd: `./${directory}`,
-    };
 
     let fix = '';
     if (opt.fix) {
