@@ -24,7 +24,7 @@ async function package(directory, opt) {
         delete env.AWS_CONFIG_FILE;
     }
     const envFlags = Object.keys(env).map((k) => `-e ${k}=${env[k]}`);
-    run(`docker run -v ${process.cwd()}:/task-src -it ${envFlags} native-lambda-build bash -c "cp -r task-src task && cd task  && run package \"${directory}\" ${flags}"`)
+    run(`docker run -v ${process.cwd()}:/task -it ${envFlags} native-lambda-build bash -c "cd task && run package \"${directory}\" ${flags}"`)
     return true;
 }
 
