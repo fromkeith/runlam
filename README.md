@@ -54,6 +54,14 @@ secondfunc/index.ts
 
 This example project has two lambda functions: _myfunc_ and _secondfunc_.
 
+Compiling a lambda function for _myfunc_ will create the following files. The _dist_ folder will be cleaned before each build.
+```
+myfunc/dist/index.js
+myfunc/dist/myfunc/index.js
+myfunc/dist/node_modules/*
+myfunc/myfunc-1537988871.zip
+```
+
 
 ### Creating a project
 > Not yet implemented
@@ -108,7 +116,12 @@ Any subfolder can contain the **runlam.json** file with the following configurat
 ```
 
 
-## Reserved Names
+## Extra Info
+
+### Distributable Zip
+The zip is set to prune all non-production packages. It also removes any aws-sdk packages as Lambda comes with those pre-installed.
+
+### Reserved Names
 
 ```
 node_modules
@@ -116,3 +129,6 @@ dist
 init
 bin
 ```
+
+### License
+MIT
