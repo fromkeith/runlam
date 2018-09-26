@@ -134,6 +134,8 @@ function isReservedFolder(f) {
     switch (f) {
     case 'node_modules':
     case 'bin':
+    case 'dist':
+    case 'init':
         return true;
     default:
         return false;
