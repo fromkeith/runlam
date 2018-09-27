@@ -95,7 +95,7 @@ async function package(directory, opt) {
     await promisify(rimraf)(`${workDir.cwd}/dist`);
 
     // apply config. opt will override any read in config
-    const config = await loadPackageConfig(directory);
+    const config = await loadPackageConfig(directory, opt.stage);
     opt = Object.assign(config, opt);
     // switch to linux?
     if (process.platform === 'win32') {

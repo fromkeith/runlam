@@ -46,6 +46,11 @@ Publish a prebuilt zipfile
 runlam myfunc --publish --publish-only=myfunc-1537988871.zip
 ```
 
+Publish for a specific stage
+```
+runlam myfunc --release --publish --stage=devo
+```
+
 ### Folder Structure
 
 An example project would be setup in the following way:
@@ -124,6 +129,14 @@ Any subfolder can contain a **runlam.json** file with the following configuratio
             "copythesefolders"
         ],
         "native": "wsl" | "docker-tag" | true
+    },
+    "stages": {
+        "devo": {
+            // exact mirror of root
+        },
+        "any-key": {
+            // exact mirror of root
+        }
     }
 }
 ```
