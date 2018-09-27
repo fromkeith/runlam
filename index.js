@@ -43,6 +43,45 @@ async function publish(opt, zipfile, directory) {
 }
 
 
+async function build(directory, opt, workDir) {
+    let fix = '';
+    if (opt.fix) {
+        fix = '--fix';
+    }
+    run(`tslint -c tslint.json ${fix} **/*.ts`, workDir);
+    run('tsc -p tsconfig.json', workDir);
+    run('ncp ./package.json ./dist/package.json', workDir);
+    run('ncp ./package-lock.json ./dist/package-lock.json', workDir);
+    run('npm install --only=production', {
+        cwd: `${workDir.cwd}/dist`,
+    });
+    // aws-sdk provided on instance
+    // so save some zip space
+    run('npm remove --save aws-sdk', {
+        cwd: `${workDir.cwd}/dist`,
+    });
+    run('npm prune --production', {
+        cwd: `${workDir.cwd}/dist`,
+    });
+    // check for any custom dirs that need to be copied. eg. native binaries
+    if (opt.copy) {
+        if (typeof opt.copy === 'string') {
+            opt.copy = [opt.copy];
+        }
+        for (const dir of opt.copy) {
+            run(`ncp ./${dir} ./dist/${dir}`, workDir);
+        }
+    }
+    // write a proxy index file
+    await promisify(fs.writeFile)(`./${directory}/dist/index.js`, makeEntryPoint(directory, opt));
+    // package it
+    const filename = `${directory}-${Date.now()}.zip`;
+    run(`bestzip ../${filename} *`, {
+        cwd: `${workDir.cwd}/dist`,
+    });
+    console.log('Zipfile created: ', filename);
+    return filename;
+}
 
 async function package(directory, opt) {
     if (!opt || typeof opt === 'string') {
@@ -65,45 +104,13 @@ async function package(directory, opt) {
         }
     }
 
-    let fix = '';
-    if (opt.fix) {
-        fix = '--fix';
+    let filename;
+    if (!opt['publish-only']) {
+        filename = await build(directory, opt, workDir);
+    } else {
+        filename = opt['publish-only'];
     }
-    run(`tslint -c tslint.json ${fix} **/*.ts`, workDir);
-    run('tsc -p tsconfig.json', workDir);
-    run('ncp ./package.json ./dist/package.json', workDir);
-    run('ncp ./package-lock.json ./dist/package-lock.json', workDir);
-    run('npm install --only=production', {
-        cwd: `${workDir.cwd}/dist`,
-    });
-    // aws-sdk provided on instance
-    // so save some zip space
-    run('npm remove --save aws-sdk', {
-        cwd: `${workDir.cwd}/dist`,
-    });
-    if (process.env.WEIRD_DOCKER_ERR) {
-        // prune throws an error.
-        // Unknown system error -116: Unknown system error -116, open '/task/myfunc/dist/node_modules/.bin/tsserver'
-        await promisify(setTimeout)(1000);
-    }
-    run('npm prune --production', {
-        cwd: `${workDir.cwd}/dist`,
-    });
-    // check for any custom dirs that need to be copied. eg. native binaries
-    if (opt.copy) {
-        if (typeof opt.copy === 'string') {
-            opt.copy = [opt.copy];
-        }
-        for (const dir of opt.copy) {
-            run(`ncp ./${dir} ./dist/${dir}`, workDir);
-        }
-    }
-    // write a proxy index file
-    await promisify(fs.writeFile)(`./${directory}/dist/index.js`, makeEntryPoint(directory, opt));
-    const filename = `${directory}-${Date.now()}.zip`;
-    run(`bestzip ../${filename} *`, {
-        cwd: `${workDir.cwd}/dist`,
-    });
+
     if (opt.publish) {
         await publish(opt, path.join(workDir.cwd, filename), directory);
     }

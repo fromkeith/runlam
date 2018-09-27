@@ -41,6 +41,11 @@ Publish
 runlam myfunc --release --publish
 ```
 
+Publish a prebuilt zipfile
+```
+runlam myfunc --publish --publish-only=myfunc-1537988871.zip
+```
+
 ### Folder Structure
 
 An example project would be setup in the following way:
@@ -92,7 +97,7 @@ can be run as
 ### Configuration
 Configure how the lambda func is exported
 
-Any subfolder can contain the **runlam.json** file with the following configurations.
+Any subfolder can contain a **runlam.json** file with the following configurations.
 ```json
 {
     "aws": {
