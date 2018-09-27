@@ -11,8 +11,19 @@ const {promisify} = require('util');
 // unmarshall them here
 function parseRawFlags(opt) {
     if (opt['copy-json']) {
-        opt.copy = JSON.parse(JSON.parse(opt['copy-json']));
-        delete opt.copy;
+        if (!opt.copy) {
+            opt.copy = [];
+        } else if (typeof opt.copy === 'string') {
+            opt.copy = [opt.copy];
+        }
+        if (typeof opt['copy-json'] === 'string') {
+            opt.copy.push(JSON.parse(JSON.parse(opt['copy-json'])));
+        } else {
+            for (const v of opt['copy-json']) {
+                opt.copy.push(JSON.parse(JSON.parse(v)));
+            }
+        }
+        delete opt['copy-json'];
     }
     return opt;
 }
