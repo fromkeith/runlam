@@ -3,6 +3,8 @@ const {
     run,
 } = require('runjs');
 
+const aws = require('./aws');
+
 // on release force us to run in linux
 // TODO: choose between docker & wsl
 async function package(directory, opt) {
@@ -16,7 +18,7 @@ async function package(directory, opt) {
     const flags = Object.keys(opt).map(k => `--${k}`).join(' ');
     const env = {};
     if (opt.publish) {
-        const aws = await getAws(opt);
+        const aws = await aws.getAws(opt);
         env.AWS_ACCESS_KEY_ID = aws.config.credentials.accessKeyId;
         env.AWS_SECRET_ACCESS_KEY = aws.config.credentials.secretAccessKey;
         env.AWS_SESSION_TOKEN = aws.config.credentials.sessionToken;
