@@ -18,10 +18,10 @@ async function package(directory, opt) {
     const flags = Object.keys(opt).map(k => `--${k}`).join(' ');
     const env = {};
     if (opt.publish) {
-        const aws = await aws.getAws(opt);
-        env.AWS_ACCESS_KEY_ID = aws.config.credentials.accessKeyId;
-        env.AWS_SECRET_ACCESS_KEY = aws.config.credentials.secretAccessKey;
-        env.AWS_SESSION_TOKEN = aws.config.credentials.sessionToken;
+        const awsInstance = await aws.getAws(opt);
+        env.AWS_ACCESS_KEY_ID = awsInstance.config.credentials.accessKeyId;
+        env.AWS_SECRET_ACCESS_KEY = awsInstance.config.credentials.secretAccessKey;
+        env.AWS_SESSION_TOKEN = awsInstance.config.credentials.sessionToken;
         // needed for WSL to forward the AWS keys.
         env.WSLENV = (env.WSLENV ? (env.WSLENV + ':') : '') + 'AWS_ACCESS_KEY_ID/u:AWS_SECRET_ACCESS_KEY/u:AWS_SESSION_TOKEN/u';
         delete env.AWS_CONFIG_FILE;

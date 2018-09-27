@@ -9,16 +9,16 @@
 
 const prompt = require('prompt');
 
-let aws;
+let awsInstance;
 
 async function getAws(opts) {
     // delay load
-    if (aws) {
-        return aws;
+    if (awsInstance) {
+        return awsInstance;
     }
-    aws = require('aws-sdk');
-    await getCreds(aws, opts);
-    return aws;
+    awsInstance = require('aws-sdk');
+    await getCreds(awsInstance, opts);
+    return awsInstance;
 }
 
 function promptFor(what) {
@@ -62,7 +62,6 @@ function getStsToken(sts, deviceList, tokenResp) {
 }
 
 async function getCreds(aws, opts) {
-    const aws = await getAws(opts);
     if (opts['aws-profile']) {
         const credentials = new aws.SharedIniFileCredentials({profile: opts['aws-profile']});
         aws.config.credentials = credentials;
@@ -109,5 +108,5 @@ async function publish(opt, zipfile, lambdaName, region) {
 
 module.exports = {
     getAws,
-    getCreds,
+    publish,
 };
