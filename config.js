@@ -17,10 +17,10 @@ function parseRawFlags(opt) {
             opt.copy = [opt.copy];
         }
         if (typeof opt['copy-json'] === 'string') {
-            opt.copy.push(JSON.parse(JSON.parse(opt['copy-json'])));
+            opt.copy.push(JSON.parse(JSON.parse(`"${opt['copy-json']}"`)));
         } else {
             for (const v of opt['copy-json']) {
-                opt.copy.push(JSON.parse(JSON.parse(v)));
+                opt.copy.push(JSON.parse(JSON.parse(`"${v}"`)));
             }
         }
         delete opt['copy-json'];
