@@ -17,7 +17,7 @@ function marshalFlag(name, value) {
         return toRet.join(' ');
     }
     if (typeof value === 'object') {
-        return `--${name}-json="${JSON.stringify(JSON.stringify(opt[k]))}"`
+        return `--${name}-json="${JSON.stringify(JSON.stringify(value))}"`
     }
     return `--${name}`;
 }
