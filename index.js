@@ -37,7 +37,7 @@ async function publish(opt, zipfile, directory) {
         if (override && override.functionName) {
             lambdaName = override.functionName;
         }
-        logger.info('publishing', zipfile, 'to', lambdaName);
+        logger.info('publishing', zipfile, 'to', lambdaName, 'in', region);
         await aws.publish(opt, zipfile, lambdaName, region);
     }
 }

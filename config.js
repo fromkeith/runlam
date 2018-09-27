@@ -35,7 +35,7 @@ async function extractConfig(config, stage) {
     }
     if (config.build) {
         if (config.build.copy) {
-            flags.copy = config.copy.slice();
+            flags.copy = config.build.copy.slice();
         }
         if (config.build.native) {
             if (config.build.native === true) {
