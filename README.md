@@ -126,7 +126,8 @@ Any subfolder can contain a **runlam.json** file with the following configuratio
     },
     "build": {
         "copy": [
-            "copythesefolders"
+            "copythesefolders",
+            {"from": "/abs/path/to", "to": "./relative/to/dist"}
         ],
         "native": "wsl" | "docker-tag" | true
     },

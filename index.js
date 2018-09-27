@@ -69,7 +69,11 @@ async function build(directory, opt, workDir) {
             opt.copy = [opt.copy];
         }
         for (const dir of opt.copy) {
-            run(`ncp ./${dir} ./dist/${dir}`, workDir);
+            if (typeof dir === 'string') {
+                run(`ncp ./${dir} ./dist/${dir}`, workDir);
+            } else {
+                run(`ncp ${dir.from} ./dist/${dir.to}`, workDir);
+            }
         }
     }
     // write a proxy index file
