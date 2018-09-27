@@ -19,6 +19,9 @@ async function package(directory, opt) {
         if (typeof opt[k] === 'string') {
             return `--${k}="${opt[k]}"`;
         }
+        if (typeof opt[k] === 'object' && opt[k].length > 0) {
+            return opt[k].map((val) => `--${k}="${val}"`).join(' ');
+        }
         return `--${k}`;
     }).join(' ');
     const env = {};
