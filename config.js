@@ -1,3 +1,7 @@
+const {
+    logger,
+} = require('runjs/lib/common');
+
 const fs = require('fs');
 const path = require('path');
 const {promisify} = require('util');

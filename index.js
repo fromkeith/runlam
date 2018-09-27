@@ -37,7 +37,7 @@ async function publish(opt, zipfile, directory) {
         if (override && override.functionName) {
             lambdaName = override.functionName;
         }
-        console.log('publishing', zipfile, 'to', lambdaName);
+        logger.info('publishing', zipfile, 'to', lambdaName);
         await aws.publish(opt, zipfile, lambdaName, region);
     }
 }
@@ -79,7 +79,7 @@ async function build(directory, opt, workDir) {
     run(`bestzip ../${filename} *`, {
         cwd: `${workDir.cwd}/dist`,
     });
-    console.log('Zipfile created: ', filename);
+    logger.info('Zipfile created: ', filename);
     return filename;
 }
 
