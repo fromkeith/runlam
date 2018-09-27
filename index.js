@@ -14,7 +14,10 @@ const path = require('path');
 const rimraf = require('rimraf');
 const win32 = require('./win32');
 const {promisify} = require('util');
-const {loadPackageConfig} = require('./config');
+const {
+    loadPackageConfig,
+    parseRawFlags,
+} = require('./config');
 
 function makeEntryPoint(directory, opt) {
     const entryPath = path.join(directory, opt['entry-override'] || 'index.js');
@@ -100,7 +103,7 @@ async function package(directory, opt) {
 
     // apply config. opt will override any read in config
     const config = await loadPackageConfig(directory, opt.stage);
-    opt = Object.assign(config, opt);
+    opt = Object.assign(config, parseRawFlags(opt));
     // switch to linux?
     if (process.platform === 'win32') {
         if (await win32.package(directory, opt)) {

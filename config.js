@@ -6,6 +6,17 @@ const fs = require('fs');
 const path = require('path');
 const {promisify} = require('util');
 
+
+// some flags may come in as json
+// unmarshall them here
+function parseRawFlags(opt) {
+    if (opt['copy-json']) {
+        opt.copy = JSON.parse(JSON.parse(opt['copy-json']));
+        delete opt.copy;
+    }
+    return opt;
+}
+
 async function extractConfig(config, stage) {
     // switch to flags
     const flags = {};
@@ -71,4 +82,5 @@ async function loadPackageConfig(directory, stage) {
 
 module.exports = {
     loadPackageConfig,
+    parseRawFlags,
 };

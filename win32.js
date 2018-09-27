@@ -21,6 +21,8 @@ async function package(directory, opt) {
         }
         if (typeof opt[k] === 'object' && opt[k].length > 0) {
             return opt[k].map((val) => `--${k}="${val}"`).join(' ');
+        } else if (typeof opt[k] === 'object') {
+            return `--${k}-json="${JSON.stringify(JSON.stringify(opt[k]))}"`
         }
         return `--${k}`;
     }).join(' ');
