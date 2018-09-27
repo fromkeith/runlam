@@ -13,6 +13,7 @@ Motivation: TypeScript can be a bit burdensome to setup for small projects. Most
 * Push version tag
 * Publish to multiple regions
 * Publish with a different function name
+* MacOSX support?
 * Probably other things too...
 
 ## Install
@@ -99,19 +100,26 @@ Any subfolder can contain the **runlam.json** file with the following configurat
         "region": "us-west-2"
     },
     "lambda": {
-        "us-west-2": {
-            "functionName": "override-name"
+        "regions": ["us-west-2", "us-east-1"],
+        "overrides": {
+            "us-west-2": {
+                "functionName": "override-name"
+            },
+            "us-east-1": {
+                "functionName": "different-name"
+            }
         },
-        "us-east-1": {
-            "functionName": "different-name"
-        }
+        "publish": true | false
     },
     "entry": {
         "handler": "index.js"
     },
-    "copy": [
-        "copythesefolders"
-    ]
+    "build": {
+        "copy": [
+            "copythesefolders"
+        ],
+        "native": "wsl" | "docker-tag" | true
+    }
 }
 ```
 
@@ -129,6 +137,11 @@ dist
 init
 bin
 ```
+
+### Docker
+A docker file is available for building native linux libraries on a non-AmazonLinux box. Currently this code base assumes that the docker image is called "native-lambda-build".
+
+> I have found that anti-virus, like windows defender can cause weird rw errors when executing. For me "npm prune" would hit a file that no longer existed, and fail. If you run into that, disable your anti-virus realtime monitoring.
 
 ### License
 MIT

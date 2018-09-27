@@ -14,6 +14,7 @@ const path = require('path');
 const rimraf = require('rimraf');
 const win32 = require('./win32');
 const {promisify} = require('util');
+const {loadPackageConfig} = require('./config');
 
 function makeEntryPoint(directory, opt) {
     const entryPath = path.join(directory, opt['entry-override'] || 'index.js');
@@ -26,50 +27,22 @@ module.exports.handler = (event, context, done) => {
 }
 
 
-async function publish(opt, zipfile, appName) {
-    const lambdaName = lambdaMap[appName]['us-west-2'];
-    console.log('publishing', zipfile, 'to', lambdaName);
-    await aws.publish(opt, zipfile, lambdaName);
+async function publish(opt, zipfile, directory) {
+    if (typeof opt.region === 'string') {
+        opt.region = [opt.region];
+    }
+    for (const region of opt.region) {
+        const override = opt[`deploy-override-${region}`];
+        let lambdaName = directory;
+        if (override && override.functionName) {
+            lambdaName = override.functionName;
+        }
+        console.log('publishing', zipfile, 'to', lambdaName);
+        await aws.publish(opt, zipfile, lambdaName, region);
+    }
 }
 
-async function loadPackageConfig(directory) {
-    const configPath = path.join(directory, 'runlam.json');
-    try {
-        await promisify(fs.access)(configPath);
-    } catch (ex) {
-        // no config
-        return {};
-    }
-    try {
-        const configStr = await promisify(fs.readFile)(configPath, 'utf-8');
-        const config = JSON.parse(configStr);
-        // switch to flags
-        const flags = {};
-        if (config.aws) {
-            if (config.aws.profile) {
-                flags['aws-profile'] = config.aws.profile;
-            }
-            if (config.aws.region) {
-                flags['aws-region'] = config.aws.region;
-            }
-        }
-        if (config.lambda) {
-            for (const region of Object.keys(config.lambda)) {
-                flags[`deploy-override-${region}`] = config.lambdaName[region].functionName;
-            }
-        }
-        if (config.entry) {
-            flags['entry-override'] = config.entry;
-        }
-        if (config.copy) {
-            flags.copy = config.copy.slice();
-        }
-        return flags;
-    } catch (ex) {
-        logger.error('Invalid runlam.json configuration file');
-        throw ex;
-    }
-}
+
 
 async function package(directory, opt) {
     if (!opt || typeof opt === 'string') {
@@ -82,7 +55,7 @@ async function package(directory, opt) {
     // clean build
     await promisify(rimraf)(`${workDir.cwd}/dist`);
 
-    // apply config
+    // apply config. opt will override any read in config
     const config = await loadPackageConfig(directory);
     opt = Object.assign(config, opt);
     // switch to linux?
@@ -108,10 +81,15 @@ async function package(directory, opt) {
     run('npm remove --save aws-sdk', {
         cwd: `${workDir.cwd}/dist`,
     });
+    if (process.env.WEIRD_DOCKER_ERR) {
+        // prune throws an error.
+        // Unknown system error -116: Unknown system error -116, open '/task/myfunc/dist/node_modules/.bin/tsserver'
+        await promisify(setTimeout)(1000);
+    }
     run('npm prune --production', {
         cwd: `${workDir.cwd}/dist`,
     });
-    // check for a linux dir and copy it
+    // check for any custom dirs that need to be copied. eg. native binaries
     if (opt.copy) {
         if (typeof opt.copy === 'string') {
             opt.copy = [opt.copy];
@@ -127,7 +105,7 @@ async function package(directory, opt) {
         cwd: `${workDir.cwd}/dist`,
     });
     if (opt.publish) {
-        await publish(path.join(workDir.cwd, filename), directory);
+        await publish(opt, path.join(workDir.cwd, filename), directory);
     }
 }
 

@@ -62,13 +62,14 @@ function getStsToken(sts, deviceList, tokenResp) {
 }
 
 async function getCreds(aws, opts) {
+    const aws = await getAws(opts);
     if (opts['aws-profile']) {
-        const credentials = new getAws().SharedIniFileCredentials({profile: opts['aws-profile']});
+        const credentials = new aws.SharedIniFileCredentials({profile: opts['aws-profile']});
         aws.config.credentials = credentials;
     }
     const region = opts['aws-region'] || 'us-west-2';
-    const sts = new getAws().STS({region});
-    const iam = new getAws().IAM({region});
+    const sts = new aws.STS({region});
+    const iam = new aws.IAM({region});
     const deviceList = await getMfaDevices(iam);
     if (deviceList && deviceList.length > 0) {
         const tokenResp = await promptFor('token');
@@ -77,9 +78,10 @@ async function getCreds(aws, opts) {
     }
 }
 
-function publish(opt, zipfile, lambdaName) {
+async function publish(opt, zipfile, lambdaName, region) {
     console.log('publishing', zipfile, 'to', lambdaName);
-    return new Promise((resolve, reject) => {
+    const aws = await getAws(opt);
+    const buf = await new Promise((resolve, reject) => {
         fs.readFile(zipfile, (err, result) => {
             if (err) {
                 reject(err);
@@ -87,11 +89,13 @@ function publish(opt, zipfile, lambdaName) {
             }
             resolve(result);
         });
-    }).then((buf) => new Promise((resolve, reject) => {
-        const lambda = new getAws(opt).Lambda({region: 'us-west-2'});
+    });
+    await new Promise((resolve, reject) => {
+        const lambda = new aws.Lambda({region});
         lambda.updateFunctionCode({
             ZipFile: buf,
             FunctionName: lambdaName,
+            Publish: !!opt['lambda-do-publish'],
         }, (err) => {
             if (err) {
                 reject(err);
@@ -99,7 +103,7 @@ function publish(opt, zipfile, lambdaName) {
             }
             resolve();
         });
-    }));
+    });
 }
 
 
