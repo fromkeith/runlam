@@ -1,4 +1,6 @@
-
+const fs = require('fs');
+const path = require('path');
+const {promisify} = require('util');
 
 async function extractConfig(config, stage) {
     // switch to flags
