@@ -155,6 +155,7 @@ node_modules
 dist
 init
 bin
+package
 ```
 
 ### Docker
