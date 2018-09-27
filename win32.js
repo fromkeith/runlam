@@ -19,7 +19,7 @@ async function package(directory, opt) {
         if (typeof opt[k] === 'string') {
             return `--${k}="${opt[k]}"`;
         }
-        return return `--${k}`;
+        return `--${k}`;
     }).join(' ');
     const env = {};
     if (opt.publish) {
