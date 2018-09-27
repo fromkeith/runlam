@@ -15,7 +15,12 @@ async function package(directory, opt) {
     if (process.platform !== 'win32') {
         return false;
     }
-    const flags = Object.keys(opt).map(k => `--${k}`).join(' ');
+    const flags = Object.keys(opt).map((k) => {
+        if (typeof opt[k] === 'string') {
+            return `--${k}="${opt[k]}"`;
+        }
+        return return `--${k}`;
+    }).join(' ');
     const env = {};
     if (opt.publish) {
         const awsInstance = await aws.getAws(opt);
