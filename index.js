@@ -65,8 +65,8 @@ async function build(directory, opt, dirs) {
     }
     run(`tslint -c tslint.json ${fix} **/*.ts`, {cwd: dirs.cwd});
     run(`tsc -p tsconfig.json --outDir ${dirs.dest}`, {cwd: dirs.cwd});
-    run('ncp ./package.json ${dirs.dest}/package.json', {cwd: dirs.cwd});
-    run('ncp ./package-lock.json ${dirs.dest}/package-lock.json', {cwd: dirs.cwd});
+    run(`ncp ./package.json ${dirs.dest}/package.json`, {cwd: dirs.cwd});
+    run(`ncp ./package-lock.json ${dirs.dest}/package-lock.json`, {cwd: dirs.cwd});
     run('npm install --only=production', {cwd: dirs.dest});
     // aws-sdk provided on instance
     // so save some zip space
