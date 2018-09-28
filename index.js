@@ -90,8 +90,10 @@ async function build(directory, opt, dirs) {
     // package it
     const filename = `${directory}-${Date.now()}.zip`;
     run(`bestzip ./${filename} *`, {cwd: dirs.dest});
-    logger.log('Zipfile created: ', filename);
-    return filename;
+    const localZipFile = path.join(dirs.cwd, filename);
+    run(`ncp ${path.join(dirs.dest, filename)} ${localZipFile}`);
+    logger.log('Zipfile created: ', localZipFile);
+    return localZipFile;
 }
 
 async function package(directory, originalFlags) {
@@ -113,13 +115,12 @@ async function package(directory, originalFlags) {
         cwd: `./${directory}`,
         dest: await makeTempDir(directory),
     };
+    let zipFileLocation;
     try {
-
-        let filename;
         if (!opt['publish-only']) {
-            filename = await build(directory, opt, dirs);
+            zipFileLocation = await build(directory, opt, dirs);
         } else {
-            filename = opt['publish-only'];
+            zipFileLocation = opt['publish-only'];
         }
     } catch (ex) {
         throw ex;
@@ -129,7 +130,7 @@ async function package(directory, originalFlags) {
     }
 
     if (opt.publish) {
-        await publish(opt, path.join(dirs.cwd, filename), directory);
+        await publish(opt, zipFileLocation, directory);
     }
 }
 
