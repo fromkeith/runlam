@@ -49,7 +49,7 @@ function extractConfig(config, stage) {
         }
         if (config.lambda.overrides) {
             for (const region of Object.keys(config.lambda.overrides)) {
-                flags[`deploy-override-${region}`] = config.lambda.overrides[region].functionName;
+                flags[`deploy-override-${region}`] = config.lambda.overrides[region];
             }
         }
         if (config.lambda.publish) {

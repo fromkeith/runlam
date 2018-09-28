@@ -104,8 +104,8 @@ describe('config parsing', function () {
                 },
             });
             expect(flags).to.deep.equal({
-                'deploy-override-us-east-1': 'bobby',
-                'deploy-override-ap-southeast-1': 'greg',
+                'deploy-override-us-east-1': {functionName: 'bobby'},
+                'deploy-override-ap-southeast-1': {functionName: 'greg'},
             });
         });
         it('should set lambda to publish', function () {
