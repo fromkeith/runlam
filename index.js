@@ -70,12 +70,8 @@ async function build(directory, opt, dirs) {
     run('npm install --only=production', {cwd: dirs.dest});
     // aws-sdk provided on instance
     // so save some zip space
-    run('npm remove --save aws-sdk', {
-        cwd: {cwd: dirs.dest},
-    });
-    run('npm prune --production', {
-        cwd: {cwd: dirs.dest},
-    });
+    run('npm remove --save aws-sdk', {cwd: dirs.dest});
+    run('npm prune --production', {cwd: dirs.dest});
     // check for any custom dirs that need to be copied. eg. native binaries
     if (opt.copy) {
         if (typeof opt.copy === 'string') {
@@ -93,9 +89,7 @@ async function build(directory, opt, dirs) {
     await promisify(fs.writeFile)(`./${directory}/dist/index.js`, makeEntryPoint(directory, opt));
     // package it
     const filename = `${directory}-${Date.now()}.zip`;
-    run(`bestzip ./${filename} *`, {
-        cwd: dirs.dest,
-    });
+    run(`bestzip ./${filename} *`, {cwd: dirs.dest});
     logger.info('Zipfile created: ', filename);
     return filename;
 }
