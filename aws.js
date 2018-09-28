@@ -62,6 +62,10 @@ function getStsToken(sts, deviceList, tokenResp) {
 }
 
 async function getCreds(aws, opts) {
+    // creds already set
+    if (process.env.AWS_SESSION_TOKEN) {
+        return;
+    }
     if (opts['aws-profile']) {
         const credentials = new aws.SharedIniFileCredentials({profile: opts['aws-profile']});
         aws.config.credentials = credentials;
