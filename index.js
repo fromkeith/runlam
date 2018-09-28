@@ -45,6 +45,15 @@ async function publish(opt, zipfile, directory) {
     }
 }
 
+// docker runs into disk issues
+// (At least for me).. so try sleep
+// to allow docker to catch up.
+function dockerSleep() {
+    if (!process.env.IS_DOCKER) {
+        return Promise.resolve();
+    }
+    return (promisify(setTimeout))(1000);
+}
 
 async function build(directory, opt, workDir) {
     let fix = '';
@@ -58,11 +67,13 @@ async function build(directory, opt, workDir) {
     run('npm install --only=production', {
         cwd: `${workDir.cwd}/dist`,
     });
+    await dockerSleep();
     // aws-sdk provided on instance
     // so save some zip space
     run('npm remove --save aws-sdk', {
         cwd: `${workDir.cwd}/dist`,
     });
+    await dockerSleep();
     run('npm prune --production', {
         cwd: `${workDir.cwd}/dist`,
     });
