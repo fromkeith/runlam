@@ -103,7 +103,7 @@ async function package(directory, originalFlags) {
 
     // apply config. opt will override any read in config
     const config = await loadPackageConfig(directory, originalFlags.stage);
-    opt = Object.assign(config, parseRawFlags(originalFlags));
+    const opt = Object.assign(config, parseRawFlags(originalFlags));
     // switch to linux?
     if (process.platform === 'win32') {
         if (await win32.package(directory, opt, originalFlags)) {

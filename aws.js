@@ -8,6 +8,7 @@
 */
 
 const prompt = require('prompt');
+const fs = require('fs');
 
 let awsInstance;
 
@@ -62,7 +63,7 @@ function getStsToken(sts, deviceList, tokenResp) {
 }
 
 async function getCreds(aws, opts) {
-    // creds already set
+    // creds already getSessionToken
     if (process.env.AWS_SESSION_TOKEN) {
         return;
     }
@@ -82,7 +83,6 @@ async function getCreds(aws, opts) {
 }
 
 async function publish(opt, zipfile, lambdaName, region) {
-    console.log('publishing', zipfile, 'to', lambdaName);
     const aws = await getAws(opt);
     const buf = await new Promise((resolve, reject) => {
         fs.readFile(zipfile, (err, result) => {

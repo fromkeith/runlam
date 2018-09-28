@@ -35,9 +35,9 @@ async function package(directory, opt, originalFlags) {
         const docker = typeof opt.docker === 'string' ? opt.docker : 'native-lambda-build';
         env.IS_DOCKER = '1';
         const envFlags = Object.keys(env).map((k) => `-e ${k}=${env[k]}`).join(' ');
-        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${docker} bash -c "cd task && runlam \"${directory}\" ${flags}"`);
+        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${docker} bash -c "cd task && runlam \\"${directory}\\" ${flags}"`);
     } else {
-        run(`bash -c "run package \"${directory}\" ${flags}"`, {
+        run(`bash -c "run package \\"${directory}\\" ${flags}"`, {
             env,
         });
     }
