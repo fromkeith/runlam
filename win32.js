@@ -5,7 +5,7 @@ const {
 
 const {
     marshalFlags,
-} from './config';
+} = './config';
 
 const aws = require('./aws');
 
