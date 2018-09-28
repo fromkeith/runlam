@@ -10,25 +10,29 @@ const {promisify} = require('util');
 // some flags may come in as json
 // unmarshall them here
 function parseRawFlags(opt) {
-    if (opt['copy-json']) {
-        if (!opt.copy) {
-            opt.copy = [];
-        } else if (typeof opt.copy === 'string') {
-            opt.copy = [opt.copy];
+    const result = Object.assign({}, opt);
+    for (const key of Object.keys(opt)) {
+        if (!key.match(/-json$/)) {
+            continue;
         }
-        if (typeof opt['copy-json'] === 'string') {
-            opt.copy.push(JSON.parse(JSON.parse(`"${opt['copy-json']}"`)));
+        const destKey = key.replace(/-json$/, '');
+        if (!result[destKey]) {
+            result[destKey] = [];
+        } else if (typeof result[destKey] === 'string') {
+            result[destKey] = [result[destKey]];
+        }
+        const parsedItem = JSON.parse(JSON.parse(`"${result[key]}"`));
+        if (parsedItem.length) {
+            result[destKey] = result[destKey].concat(parsedItem);
         } else {
-            for (const v of opt['copy-json']) {
-                opt.copy.push(JSON.parse(JSON.parse(`"${v}"`)));
-            }
+            result[destKey].push(parsedItem);
         }
-        delete opt['copy-json'];
+        delete result[key];
     }
-    return opt;
+    return result;
 }
 
-async function extractConfig(config, stage) {
+function extractConfig(config, stage) {
     // switch to flags
     const flags = {};
     if (config.aws) {
@@ -68,7 +72,7 @@ async function extractConfig(config, stage) {
         }
     }
     if (stage) {
-        return Object.assign(flags, await extractConfig(config.stages[stage]));
+        return Object.assign(flags, extractConfig(config.stages[stage]));
     }
     return flags;
 }
@@ -91,7 +95,23 @@ async function loadPackageConfig(directory, stage) {
     }
 }
 
+function marshalFlag(name, value) {
+    if (typeof value === 'string') {
+        return `--${name}="${value}"`;
+    }
+    if (typeof value === 'object') {
+        return `--${name}-json=${JSON.stringify(JSON.stringify(value))}`
+    }
+    return `--${name}`;
+}
+
+function marshalFlags(flags) {
+    return Object.keys(flags).map((k) => marshalFlag(k, flags[k])).join(' ');
+}
+
 module.exports = {
+    extractConfig,
     loadPackageConfig,
+    marshalFlags,
     parseRawFlags,
 };

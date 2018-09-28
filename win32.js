@@ -3,24 +3,12 @@ const {
     run,
 } = require('runjs');
 
+const {
+    marshalFlags,
+} from './config';
+
 const aws = require('./aws');
 
-function marshalFlag(name, value) {
-    if (typeof value === 'string') {
-        return `--${name}="${value}"`;
-    }
-    if (typeof value === 'object' && value.length > 0) {
-        const toRet = [];
-        for (const subVal of value) {
-            toRet.push(marshalFlag(name, subVal));
-        }
-        return toRet.join(' ');
-    }
-    if (typeof value === 'object') {
-        return `--${name}-json=${JSON.stringify(JSON.stringify(value))}`
-    }
-    return `--${name}`;
-}
 
 // on release force us to run in linux
 // TODO: choose between docker & wsl
@@ -32,7 +20,7 @@ async function package(directory, opt) {
     if (process.platform !== 'win32') {
         return false;
     }
-    const flags = Object.keys(opt).map((k) => marshalFlag(k, opt[k])).join(' ');
+    const flags = marshalFlags(opt);
     const env = {};
     if (opt.publish) {
         const awsInstance = await aws.getAws(opt);
