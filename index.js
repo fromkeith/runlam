@@ -12,6 +12,7 @@ const aws = require('./aws');
 const fs = require('fs');
 const path = require('path');
 const rimraf = require('rimraf');
+const temp = require('temp');
 const win32 = require('./win32');
 const {promisify} = require('util');
 const {
@@ -45,37 +46,35 @@ async function publish(opt, zipfile, directory) {
     }
 }
 
-// docker runs into disk issues
-// (At least for me).. so try sleep
-// to allow docker to catch up.
-function dockerSleep() {
-    if (!process.env.IS_DOCKER) {
-        return Promise.resolve();
-    }
-    return (promisify(setTimeout))(1000);
+function makeTempDir(directory) {
+    return new Promise((resolve, reject) => {
+        temp.mkdir(directory, (err, dirPath) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(dirPath);
+        });
+    });
 }
 
-async function build(directory, opt, workDir) {
+async function build(directory, opt, dirs) {
     let fix = '';
     if (opt.fix) {
         fix = '--fix';
     }
-    run(`tslint -c tslint.json ${fix} **/*.ts`, workDir);
-    run('tsc -p tsconfig.json', workDir);
-    run('ncp ./package.json ./dist/package.json', workDir);
-    run('ncp ./package-lock.json ./dist/package-lock.json', workDir);
-    run('npm install --only=production', {
-        cwd: `${workDir.cwd}/dist`,
-    });
-    await dockerSleep();
+    run(`tslint -c tslint.json ${fix} **/*.ts`, {cwd: dirs.cwd});
+    run(`tsc -p tsconfig.json --outDir ${dirs.dest}`, {cwd: dirs.cwd});
+    run('ncp ./package.json ${dirs.dest}/package.json', {cwd: dirs.cwd});
+    run('ncp ./package-lock.json ${dirs.dest}/package-lock.json', {cwd: dirs.cwd});
+    run('npm install --only=production', {cwd: dirs.dest});
     // aws-sdk provided on instance
     // so save some zip space
     run('npm remove --save aws-sdk', {
-        cwd: `${workDir.cwd}/dist`,
+        cwd: {cwd: dirs.dest},
     });
-    await dockerSleep();
     run('npm prune --production', {
-        cwd: `${workDir.cwd}/dist`,
+        cwd: {cwd: dirs.dest},
     });
     // check for any custom dirs that need to be copied. eg. native binaries
     if (opt.copy) {
@@ -84,9 +83,9 @@ async function build(directory, opt, workDir) {
         }
         for (const dir of opt.copy) {
             if (typeof dir === 'string') {
-                run(`ncp ./${dir} ./dist/${dir}`, workDir);
+                run(`ncp ./${dir} ${path.join(dirs.dest, dir)}`, {cwd: dirs.cwd});
             } else {
-                run(`ncp ${dir.from} ./dist/${dir.to}`, workDir);
+                run(`ncp ${dir.from} ${path.join(dirs.dest, dir.to)}`, {cwd: dirs.cwd});
             }
         }
     }
@@ -94,8 +93,8 @@ async function build(directory, opt, workDir) {
     await promisify(fs.writeFile)(`./${directory}/dist/index.js`, makeEntryPoint(directory, opt));
     // package it
     const filename = `${directory}-${Date.now()}.zip`;
-    run(`bestzip ../${filename} *`, {
-        cwd: `${workDir.cwd}/dist`,
+    run(`bestzip ./${filename} *`, {
+        cwd: dirs.dest,
     });
     logger.info('Zipfile created: ', filename);
     return filename;
@@ -105,12 +104,6 @@ async function package(directory, originalFlags) {
     if (!originalFlags || typeof originalFlags === 'string') {
         originalFlags = options(this) || {};
     }
-
-    const workDir = {
-        cwd: `./${directory}`,
-    };
-    // clean build
-    await promisify(rimraf)(`${workDir.cwd}/dist`);
 
     // apply config. opt will override any read in config
     const config = await loadPackageConfig(directory, originalFlags.stage);
@@ -122,15 +115,27 @@ async function package(directory, originalFlags) {
         }
     }
 
-    let filename;
-    if (!opt['publish-only']) {
-        filename = await build(directory, opt, workDir);
-    } else {
-        filename = opt['publish-only'];
+    const dirs = {
+        cwd: `./${directory}`,
+        dest: await makeTempDir(directory),
+    };
+    try {
+
+        let filename;
+        if (!opt['publish-only']) {
+            filename = await build(directory, opt, dirs);
+        } else {
+            filename = opt['publish-only'];
+        }
+    } catch (ex) {
+        throw ex;
+    } finally {
+        // clean build files
+        await promisify(rimraf)(`${dirs.dest}`);
     }
 
     if (opt.publish) {
-        await publish(opt, path.join(workDir.cwd, filename), directory);
+        await publish(opt, path.join(dirs.cwd, filename), directory);
     }
 }
 
