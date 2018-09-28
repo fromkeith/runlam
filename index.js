@@ -86,7 +86,7 @@ async function build(directory, opt, dirs) {
         }
     }
     // write a proxy index file
-    await promisify(fs.writeFile)(`./${directory}/dist/index.js`, makeEntryPoint(directory, opt));
+    await promisify(fs.writeFile)(`./${dirs.dest}/index.js`, makeEntryPoint(directory, opt));
     // package it
     const filename = `${directory}-${Date.now()}.zip`;
     run(`bestzip ./${filename} *`, {cwd: dirs.dest});
@@ -126,7 +126,7 @@ async function package(directory, originalFlags) {
         throw ex;
     } finally {
         // clean build files
-        await promisify(rimraf)(`${dirs.dest}`);
+        await promisify(rimraf)(dirs.dest);
     }
 
     if (opt.publish) {
