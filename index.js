@@ -90,9 +90,9 @@ async function build(directory, opt, workDir) {
     return filename;
 }
 
-async function package(directory, opt) {
-    if (!opt || typeof opt === 'string') {
-        opt = options(this) || {};
+async function package(directory, originalFlags) {
+    if (!originalFlags || typeof originalFlags === 'string') {
+        originalFlags = options(this) || {};
     }
 
     const workDir = {
@@ -102,11 +102,11 @@ async function package(directory, opt) {
     await promisify(rimraf)(`${workDir.cwd}/dist`);
 
     // apply config. opt will override any read in config
-    const config = await loadPackageConfig(directory, opt.stage);
-    opt = Object.assign(config, parseRawFlags(opt));
+    const config = await loadPackageConfig(directory, originalFlags.stage);
+    opt = Object.assign(config, parseRawFlags(originalFlags));
     // switch to linux?
     if (process.platform === 'win32') {
-        if (await win32.package(directory, opt)) {
+        if (await win32.package(directory, opt, originalFlags)) {
             return;
         }
     }

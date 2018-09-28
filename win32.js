@@ -12,7 +12,7 @@ const aws = require('./aws');
 
 // on release force us to run in linux
 // TODO: choose between docker & wsl
-async function package(directory, opt) {
+async function package(directory, opt, originalFlags) {
     // force linux run
     if (!opt.release) {
         return false;
@@ -20,7 +20,7 @@ async function package(directory, opt) {
     if (process.platform !== 'win32') {
         return false;
     }
-    const flags = marshalFlags(opt);
+    const flags = marshalFlags(originalFlags);
     const env = {};
     if (opt.publish) {
         const awsInstance = await aws.getAws(opt);
