@@ -100,7 +100,7 @@ function marshalFlag(name, value) {
         return `--${name}="${value}"`;
     }
     if (typeof value === 'object') {
-        return `--${name}-json=${JSON.stringify(JSON.stringify(value))}`
+        return `--${name}-json=${JSON.stringify(JSON.stringify(value))}`;
     }
     return `--${name}`;
 }

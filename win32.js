@@ -5,7 +5,7 @@ const {
 
 const {
     marshalFlags,
-} = './config';
+} = require('./config');
 
 const aws = require('./aws');
 
@@ -34,7 +34,7 @@ async function package(directory, opt, originalFlags) {
     if (opt.docker) {
         const docker = typeof opt.docker === 'string' ? opt.docker : 'native-lambda-build';
         const envFlags = Object.keys(env).map((k) => `-e ${k}=${env[k]}`);
-        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${docker} bash -c "cd task && runlam \"${directory}\" ${flags}"`)
+        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${docker} bash -c "cd task && runlam \"${directory}\" ${flags}"`);
     } else {
         run(`bash -c "run package \"${directory}\" ${flags}"`, {
             env,
