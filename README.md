@@ -11,10 +11,10 @@ Motivation: TypeScript can be a bit burdensome to setup for small projects. Most
 * Init projects
 * Override tslint & tsconfig
 * Push version tag
-* Publish to multiple regions
-* Publish with a different function name
+* Allow runfiles.
 * MacOSX support?
 * Probably other things too...
+* Tests... for me and for you!
 
 ## Install
 WIP, untested... yet

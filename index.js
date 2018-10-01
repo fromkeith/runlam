@@ -9,6 +9,7 @@ const {
 } = require('runjs/lib/common');
 
 const aws = require('./aws');
+const entry = require('./entry');
 const fs = require('fs');
 const path = require('path');
 const rimraf = require('rimraf');
@@ -19,17 +20,6 @@ const {
     loadPackageConfig,
     parseRawFlags,
 } = require('./config');
-
-function makeEntryPoint(directory, opt) {
-    const entryPath = path.join(directory, opt['entry-override'] || 'index.js');
-    return `
-const root = require('${entryPath}');
-module.exports.handler = (event, context, done) => {
-    return root.handler(event, context, done);
-};
-    `;
-}
-
 
 async function publish(opt, zipfile, directory) {
     if (typeof opt.region === 'string') {
@@ -58,15 +48,6 @@ function makeTempDir(directory) {
     });
 }
 
-async function checkIfEntryFileNeeded(directory, targetFile, opt) {
-    try {
-        // if the index exists we don't need to create one
-        await promisify(fs.access)(targetFile);
-    } catch (ex) {
-        // otherwise typescript put it in a subdir, so create the entry point relay
-        await promisify(fs.writeFile)(targetFile, makeEntryPoint(directory, opt));
-    }
-}
 
 async function build(directory, opt, dirs) {
     let fix = '';
@@ -96,7 +77,7 @@ async function build(directory, opt, dirs) {
         }
     }
     // write a proxy index file
-    await checkIfEntryFileNeeded(directory, `${dirs.dest}/index.js`, opt);
+    await entry.checkIfEntryFileNeeded(directory, dirs.dest, opt);
     // package it
     const filename = `${directory}-${Date.now()}.zip`;
     run(`bestzip ./${filename} *`, {cwd: dirs.dest});
@@ -150,6 +131,7 @@ function isReservedFolder(f) {
     case 'bin':
     case 'dist':
     case 'init':
+    case 'test':
         return true;
     default:
         return false;
