@@ -121,9 +121,7 @@ Any subfolder can contain a **runlam.json** file with the following configuratio
         },
         "publish": true | false
     },
-    "entry": {
-        "handler": "index.js"
-    },
+    "entry": "index.js",
     "build": {
         "copy": [
             "copythesefolders",
