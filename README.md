@@ -157,7 +157,7 @@ package
 ```
 
 ### Docker
-A docker file is available for building native linux libraries on a non-AmazonLinux box. Currently this code base assumes that the docker image is called "native-lambda-build".
+A docker file is available for building native linux libraries on a non-AmazonLinux box. Currently this code base uses the included docker file (on dochub: fromkeith/runlam).
 
 > I have found that anti-virus, like windows defender can cause weird rw errors when executing. For me "npm prune" would hit a file that no longer existed, and fail. If you run into that, disable your anti-virus realtime monitoring.
 
