@@ -58,6 +58,16 @@ function makeTempDir(directory) {
     });
 }
 
+async function checkIfEntryFileNeeded(directory, targetFile, opt) {
+    try {
+        // if the index exists we don't need to create one
+        await promisify(fs.access)(targetFile);
+    } catch (ex) {
+        // otherwise typescript put it in a subdir, so create the entry point relay
+        await promisify(fs.writeFile)(targetFile, makeEntryPoint(directory, opt));
+    }
+}
+
 async function build(directory, opt, dirs) {
     let fix = '';
     if (opt.fix) {
@@ -86,7 +96,7 @@ async function build(directory, opt, dirs) {
         }
     }
     // write a proxy index file
-    await promisify(fs.writeFile)(`${dirs.dest}/index.js`, makeEntryPoint(directory, opt));
+    await checkIfEntryFileNeeded(directory, `${dirs.dest}/index.js`, opt);
     // package it
     const filename = `${directory}-${Date.now()}.zip`;
     run(`bestzip ./${filename} *`, {cwd: dirs.dest});
