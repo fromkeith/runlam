@@ -7,9 +7,10 @@ const path = require('path');
 const {promisify} = require('util');
 const fs = require('fs');
 
-function makeEntryPoint(directory, entryPath) {
+function makeEntryPoint(entryPath) {
+    const escaped = entryPath.replace(/\\/g, '/');
     return `
-const root = require('${entryPath}');
+const root = require('./${escaped}');
 module.exports.handler = (event, context, done) => {
     return root.handler(event, context, done);
 };
@@ -32,7 +33,7 @@ async function checkIfEntryFileNeeded(directory, destFolder, opt) {
         const entryPath = path.join(destFolder, relativePath);
         await promisify(fs.access)(entryPath);
         // create the entry point relay, so that an index.js exists
-        await promisify(fs.writeFile)(expectedIndex, makeEntryPoint(directory, relativePath));
+        await promisify(fs.writeFile)(expectedIndex, makeEntryPoint(relativePath));
         return expectedIndex;
     } catch (ex) {
         // ignore

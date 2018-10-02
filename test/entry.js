@@ -84,7 +84,7 @@ describe('determining entry point', function () {
         const files = crawlRoot();
         expect(files.indexOf(found)).to.not.be.equal(-1);
         expect(files.length).to.be.equal(startFiles.length + 1);
-        expect(fs.readFileSync(found, 'utf-8')).to.be.equal(`\nconst root = require('project\\index.js');\nmodule.exports.handler = (event, context, done) => {\n    return root.handler(event, context, done);\n};\n    `);
+        expect(fs.readFileSync(found, 'utf-8')).to.be.equal(`\nconst root = require('./project/index.js');\nmodule.exports.handler = (event, context, done) => {\n    return root.handler(event, context, done);\n};\n    `);
     });
 
     it('finds the custom file in the project path, and creates an entry index', async function () {
@@ -95,7 +95,7 @@ describe('determining entry point', function () {
         const files = crawlRoot();
         expect(files.indexOf(found)).to.not.be.equal(-1);
         expect(files.length).to.be.equal(startFiles.length + 1);
-        expect(fs.readFileSync(found, 'utf-8')).to.be.equal(`\nconst root = require('project\\custom.js');\nmodule.exports.handler = (event, context, done) => {\n    return root.handler(event, context, done);\n};\n    `);
+        expect(fs.readFileSync(found, 'utf-8')).to.be.equal(`\nconst root = require('./project/custom.js');\nmodule.exports.handler = (event, context, done) => {\n    return root.handler(event, context, done);\n};\n    `);
     });
 
 });
