@@ -51,6 +51,11 @@ Publish for a specific stage
 runlam myfunc --release --publish --stage=devo
 ```
 
+Put packaged code into a local folder, and don't invoke the copy commands. Eg. local dev work
+```
+runlam myfunc --dev=dest/ --no-copy
+```
+
 ### Folder Structure
 
 An example project would be setup in the following way:
@@ -65,11 +70,8 @@ secondfunc/index.ts
 
 This example project has two lambda functions: _myfunc_ and _secondfunc_.
 
-Compiling a lambda function for _myfunc_ will create the following files. The _dist_ folder will be cleaned before each build.
+Compiling a lambda function for _myfunc_ will create the following files.
 ```
-myfunc/dist/index.js
-myfunc/dist/myfunc/index.js
-myfunc/dist/node_modules/*
 myfunc/myfunc-1537988871.zip
 ```
 

@@ -64,7 +64,7 @@ async function build(directory, opt, dirs) {
     run('npm remove --save aws-sdk', {cwd: dirs.dest});
     run('npm prune --production', {cwd: dirs.dest});
     // check for any custom dirs that need to be copied. eg. native binaries
-    if (opt.copy) {
+    if (opt.copy && !opt['no-copy']) {
         if (typeof opt.copy === 'string') {
             opt.copy = [opt.copy];
         }
@@ -78,6 +78,10 @@ async function build(directory, opt, dirs) {
     }
     // write a proxy index file
     await entry.checkIfEntryFileNeeded(directory, dirs.dest, opt);
+    if (opt.dev) {
+        run(`ncp ${dirs.dest} ${opt.dev}`, {cwd: dirs.cwd});
+        return;
+    }
     // package it
     const filename = `${directory}-${Date.now()}.zip`;
     run(`bestzip ./${filename} *`, {cwd: dirs.dest});
