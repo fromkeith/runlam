@@ -71,8 +71,15 @@ async function build(directory, opt, dirs) {
         for (const dir of opt.copy) {
             if (typeof dir === 'string') {
                 run(`ncp ./${dir} ${path.join(dirs.dest, dir)}`, {cwd: dirs.cwd});
-            } else {
-                run(`ncp ${dir.from} ${path.join(dirs.dest, dir.to)}`, {cwd: dirs.cwd});
+                continue;
+            }
+            try {
+                await run(`ncp ${dir.from} ${path.join(dirs.dest, dir.to)}`, {cwd: dirs.cwd, async: true});
+            } catch (ex) {
+                if (dir.critical === false) {
+                    continue;
+                }
+                throw ex;
             }
         }
     }
