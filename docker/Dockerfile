@@ -7,5 +7,5 @@ RUN yum groupinstall 'Development Tools' -y
 RUN curl --silent --location https://rpm.nodesource.com/setup_10.x | bash -
 RUN yum -y install nodejs gcc-c++ make
 RUN npm install -g runjs node-gyp node-pre-gyp
-RUN npm install -g https://github.com/fromkeith/runlam.git#64e4ee3dca6f3bd0cd165181dbed2b731234d1c1
+RUN npm install -g https://github.com/fromkeith/runlam.git#f45b3b630fdf2f70b1ee5daa45c2bd14949a113c
 
