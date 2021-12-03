@@ -35,7 +35,11 @@ async function package(directory, opt, originalFlags) {
         const docker = typeof opt.docker === 'string' ? opt.docker : 'fromkeith/runlam';
         env.IS_DOCKER = '1';
         const envFlags = Object.keys(env).map((k) => `-e ${k}=${env[k]}`).join(' ');
-        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${docker} bash -c "cd task && runlam \\"${directory}\\" ${flags}"`);
+        let platformArch = '';
+        if (opt.arch) {
+            platformArch = `--platform ${opt.arch}`;
+        }
+        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${platformArch} ${docker} bash -c "cd task && runlam \\"${directory}\\" ${flags}"`);
     } else {
         run(`bash -l -c "runlam \\"${directory}\\" ${flags}"`, {
             env,

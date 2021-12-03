@@ -69,6 +69,9 @@ function extractConfig(config, stage) {
             } else if (config.build.native && config.build.native !== 'wsl') {
                 flags.docker = config.build.native;
             }
+            if (config.build.arch && flags.docker) {
+                flags.arch = config.build.arch;
+            }
         }
     }
     if (stage) {
