@@ -1,6 +1,6 @@
 const expect = require('chai').expect;
 
-const entry = require('./../entry.js');
+const entry = require('./../dist/entry.js');
 const fs = require('fs');
 const path = require('path');
 

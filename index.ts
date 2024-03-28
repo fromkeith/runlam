@@ -1,32 +1,37 @@
 
-const {
+import {
     run,
     options,
-} = require('runjs');
+} from 'runjs';
 
-const {
+import {
     logger,
-} = require('runjs/lib/common');
+} from 'runjs/lib/common';
 
-const aws = require('./aws');
-const entry = require('./entry');
-const fs = require('fs');
-const path = require('path');
-const rimraf = require('rimraf');
+import * as aws from './aws';
+import * as entry from './entry';
+import {promises as fs} from 'fs';
+import * as path from 'path';
+import {rimraf} from 'rimraf';
 const temp = require('temp');
-const win32 = require('./win32');
-const {promisify} = require('util');
-const {
+import * as win32 from './win32';
+import {promisify} from 'util';
+import {exec as execAsync} from 'node:child_process';
+const exec = promisify(execAsync);
+
+import {
     loadPackageConfig,
     parseRawFlags,
-} = require('./config');
+    type IConfigFlags,
+    type ILambdaOverride,
+} from './config';
 
-async function publish(opt, zipfile, directory) {
+async function publish(opt: IConfigFlags, zipfile: string | boolean, directory: string) {
     if (typeof opt.region === 'string') {
         opt.region = [opt.region];
     }
     for (const region of opt.region) {
-        const override = opt[`deploy-override-${region}`];
+        const override: ILambdaOverride | undefined = (opt as any)[`deploy-override-${region}`];
         let lambdaName = directory;
         if (override && override.functionName) {
             lambdaName = override.functionName;
@@ -36,9 +41,9 @@ async function publish(opt, zipfile, directory) {
     }
 }
 
-function makeTempDir(directory) {
+function makeTempDir(directory: string): Promise<string> {
     return new Promise((resolve, reject) => {
-        temp.mkdir(directory, (err, dirPath) => {
+        temp.mkdir(directory, (err: Error, dirPath: string) => {
             if (err) {
                 reject(err);
                 return;
@@ -49,12 +54,31 @@ function makeTempDir(directory) {
 }
 
 
-async function build(directory, opt, dirs) {
+async function build(directory: string, opt: IConfigFlags, dirs: IDirsInfo): Promise<string> {
     let fix = '';
     if (opt.fix) {
         fix = '--fix';
     }
-    run(`tslint -c tslint.json ${fix} **/*.ts`, {cwd: dirs.cwd});
+    // verify node version
+    if (!opt.nodeVersion) {
+        logger.log("No `node` version set, defaulting to 16");
+        opt.nodeVersion = 16;
+    }
+    const {stdout} = await exec("node --version");
+    const versionString = stdout.trim();
+    if (versionString.indexOf(`v${opt.nodeVersion}`) !== 0) {
+        throw `Wrong node version. Aborting build. Expected: v${opt.nodeVersion}`;
+    }
+
+    // migrate to eslint
+    try {
+        await fs.stat(path.join(dirs.cwd, '.eslintrc.js'));
+    } catch (ex) {
+        await fs.stat(path.join(dirs.cwd, 'tsconfig.json'));
+        run('npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-import@latest eslint-plugin-jsdoc@latest eslint-plugin-prefer-arrow@latest', {cwd: dirs.cwd});
+        run('npx tslint-to-eslint-config', {cwd: dirs.cwd});
+    }
+    run(`npx eslint -c .eslintrc.js ${fix} **/*.ts`, {cwd: dirs.cwd});
     run(`tsc -p tsconfig.json --outDir ${dirs.dest}`, {cwd: dirs.cwd});
     run(`ncp ./package.json ${dirs.dest}/package.json`, {cwd: dirs.cwd});
     run(`ncp ./package-lock.json ${dirs.dest}/package-lock.json`, {cwd: dirs.cwd});
@@ -98,26 +122,31 @@ async function build(directory, opt, dirs) {
     return localZipFile;
 }
 
-async function package(directory, originalFlags) {
+interface IDirsInfo{
+    cwd: string;
+    dest: string;
+}
+
+async function packageUp(directory: string, originalFlags: any) {
     if (!originalFlags || typeof originalFlags === 'string') {
         originalFlags = options(this) || {};
     }
 
     // apply config. opt will override any read in config
     const config = await loadPackageConfig(directory, originalFlags.stage);
-    const opt = Object.assign(config, parseRawFlags(originalFlags));
+    const opt: IConfigFlags = Object.assign(config, parseRawFlags(originalFlags));
     // switch to linux?
     if (process.platform === 'win32') {
-        if (await win32.package(directory, opt, originalFlags)) {
+        if (await win32.packageUp(directory, opt, originalFlags)) {
             return;
         }
     }
 
-    const dirs = {
+    const dirs: IDirsInfo = {
         cwd: `./${directory}`,
         dest: await makeTempDir(directory),
     };
-    let zipFileLocation;
+    let zipFileLocation: string | boolean;
     try {
         if (!opt['publish-only']) {
             zipFileLocation = await build(directory, opt, dirs);
@@ -128,7 +157,7 @@ async function package(directory, originalFlags) {
         throw ex;
     } finally {
         // clean build files
-        await promisify(rimraf)(dirs.dest);
+        await rimraf(dirs.dest);
     }
 
     if (opt.publish) {
@@ -136,7 +165,7 @@ async function package(directory, originalFlags) {
     }
 }
 
-function isReservedFolder(f) {
+function isReservedFolder(f: string): boolean {
     switch (f) {
     case 'node_modules':
     case 'bin':
@@ -151,16 +180,16 @@ function isReservedFolder(f) {
 
 // Find subfolder that contain lambda funcs
 // and define them as runjs modules.
-function findModules() {
-    const modules = {};
-    const files = fs.readdirSync('.');
-    const makeSubDir = (pkg) => {
+async function findModules() {
+    const modules: any = {};
+    const files = await fs.readdir('.');
+    const makeSubDir = (pkg: string) => {
         return function subdir() {
-            package(pkg, options(this));
+            packageUp(pkg, options(this));
         };
     };
     for (const f of files) {
-        const stat = fs.statSync(f);
+        const stat = await fs.stat(f);
         if (!stat.isDirectory()) {
             continue;
         }
@@ -176,8 +205,8 @@ function findModules() {
         // import sub runfiles
         try {
             const subRunFilePath = path.join(f, 'runfile.js');
-            fs.accessSync(subRunFilePath);
-            const subRunFile = require(subRunFilePath);
+            await fs.access(subRunFilePath);
+            const subRunFile = await import(subRunFilePath);
             for (const k of Object.keys(subRunFile)) {
                 modules[`${f}:${k}`] = subRunFile[k];
             }
@@ -189,4 +218,4 @@ function findModules() {
     return modules;
 }
 
-module.exports = findModules();
+export default findModules();

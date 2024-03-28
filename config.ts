@@ -1,16 +1,78 @@
-const {
+import {
     logger,
-} = require('runjs/lib/common');
+} from 'runjs/lib/common';
 
-const fs = require('fs');
-const path = require('path');
-const {promisify} = require('util');
+import {promises as fs} from 'fs';
+import * as path from 'path';
+
+
+export interface ILambdaOverride {
+    functionName: string;
+}
+interface IRegionOverride {
+    [region: string]: ILambdaOverride;
+}
+interface ICopyInfo {
+    from: string;
+    to: string;
+    critical?: boolean;
+}
+interface IBuildInfo {
+    copy?: (string | ICopyInfo)[];
+    native?: string | boolean;
+    arch?: string;
+    node?: number;
+}
+interface IAwsConfig {
+    profile?: string;
+    region?: string;
+}
+
+interface IStages {
+    [stage: string]: IConfig;
+}
+interface ILambda {
+    regions?: string[];
+    overrides?: IRegionOverride;
+    publish?: boolean;
+}
+export interface IConfig {
+    lambda?: ILambda;
+    entry?: string;
+    stages?: IStages;
+    build?: IBuildInfo;
+    aws?: IAwsConfig;
+}
+
+export interface IConfigFlags {
+    ['aws-profile']?: string;
+    ['aws-region']?: string; // to get config / creds from
+    region?: string[];
+    ['lambda-do-publish']?: boolean;
+    ['entry-override']?: string;
+    copy?: (string | ICopyInfo)[];
+    docker?: boolean | string;
+    arch?: string;
+    ['publish-only']?: boolean;
+    ['no-copy']?: boolean;
+    nodeVersion?: number;
+
+    // lint fix
+    fix?: boolean;
+    // dev mode
+    dev?: boolean;
+    // should we publish
+    publish?: boolean;
+    // should we release
+    release?: boolean;
+
+}
 
 
 // some flags may come in as json
 // unmarshall them here
-function parseRawFlags(opt) {
-    const result = Object.assign({}, opt);
+export function parseRawFlags(opt: IConfig): IConfig {
+    const result: any = Object.assign({}, opt);
     for (const key of Object.keys(opt)) {
         if (!key.match(/-json$/)) {
             continue;
@@ -29,12 +91,12 @@ function parseRawFlags(opt) {
         }
         delete result[key];
     }
-    return result;
+    return result as IConfig;
 }
 
-function extractConfig(config, stage) {
+export function extractConfig(config: IConfig, stage?: string): IConfigFlags {
     // switch to flags
-    const flags = {};
+    const flags: IConfigFlags = {};
     if (config.aws) {
         if (config.aws.profile) {
             flags['aws-profile'] = config.aws.profile;
@@ -49,7 +111,7 @@ function extractConfig(config, stage) {
         }
         if (config.lambda.overrides) {
             for (const region of Object.keys(config.lambda.overrides)) {
-                flags[`deploy-override-${region}`] = config.lambda.overrides[region];
+                (flags as any)[`deploy-override-${region}`] = config.lambda.overrides[region];
             }
         }
         if (config.lambda.publish) {
@@ -73,6 +135,12 @@ function extractConfig(config, stage) {
                 flags.arch = config.build.arch;
             }
         }
+        if (config.build.node) {
+            flags.nodeVersion = config.build.node;
+        } else {
+            flags.nodeVersion = 16; // default to 16 if not set
+            logger.log("No `node` version set, defaulting to 16");
+        }
     }
     if (stage) {
         return Object.assign(flags, extractConfig(config.stages[stage]));
@@ -80,16 +148,16 @@ function extractConfig(config, stage) {
     return flags;
 }
 
-async function loadPackageConfig(directory, stage) {
+export async function loadPackageConfig(directory: string, stage: string): Promise<IConfigFlags> {
     const configPath = path.join(directory, 'runlam.json');
     try {
-        await promisify(fs.access)(configPath);
+        await fs.access(configPath);
     } catch (ex) {
         // no config
         return {};
     }
     try {
-        const configStr = await promisify(fs.readFile)(configPath, 'utf-8');
+        const configStr = await fs.readFile(configPath, 'utf-8');
         const config = JSON.parse(configStr);
         return extractConfig(config, stage);
     } catch (ex) {
@@ -98,7 +166,7 @@ async function loadPackageConfig(directory, stage) {
     }
 }
 
-function marshalFlag(name, value) {
+function marshalFlag(name: string, value: string) {
     if (typeof value === 'string') {
         return `--${name}="${value}"`;
     }
@@ -108,13 +176,7 @@ function marshalFlag(name, value) {
     return `--${name}`;
 }
 
-function marshalFlags(flags) {
+export function marshalFlags(flags: any) {
     return Object.keys(flags).map((k) => marshalFlag(k, flags[k])).join(' ');
 }
 
-module.exports = {
-    extractConfig,
-    loadPackageConfig,
-    marshalFlags,
-    parseRawFlags,
-};

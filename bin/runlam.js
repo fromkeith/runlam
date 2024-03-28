@@ -20,12 +20,13 @@ const {
 const path = require('path');
 
 
-function main() {
+async function main() {
   try {
-    const runfile = load({
-        runfile: path.join(__dirname, '../', 'index.js'),
+    const runfileProm = load({
+        runfile: path.join(__dirname, '../dist/', 'index.js'),
     }, logger, requirer, hasAccess);
     const ARGV = process.argv.slice();
+    const runfile = await runfileProm;
 
     if (ARGV.length > 2) {
       call(runfile, ARGV, logger)

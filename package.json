@@ -1,11 +1,12 @@
 {
   "name": "runlam",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Easy TypeScript Lambda functions.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "mocha test/*",
-    "lint": "eslint *.js"
+    "lint": "eslint *.js",
+    "build": "tsc -p ."
   },
   "bin": {
     "runlam": "bin/runlam.js"
@@ -13,16 +14,26 @@
   "author": "fromkeith <foremery@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.1354.0",
+    "@aws-sdk/client-iam": "^3.540.0",
+    "@aws-sdk/client-lambda": "^3.540.0",
+    "@aws-sdk/client-sts": "^3.540.0",
+    "@aws-sdk/credential-providers": "^3.540.0",
+    "@types/node": "^20.11.30",
+    "glob": "^10.3.10",
     "microcli": "^1.3.3",
-    "prompt": "^1.2.0",
+    "minimatch": "^9.0.3",
+    "prompt": "^1.3.0",
+    "rimraf": "^5.0.5",
     "runjs": "^4.4.2",
-    "temp": "^0.8.4"
+    "temp": "^0.9.4"
   },
   "devDependencies": {
+    "@types/prompt": "^1.1.8",
+    "@types/temp": "^0.9.4",
     "chai": "^4.3.4",
-    "eslint": "^5.16.0",
-    "mocha": "^10.2.0",
-    "string-argv": "^0.1.2"
+    "eslint": "^8.57.0",
+    "mocha": "^7.2.0",
+    "string-argv": "^0.1.2",
+    "typescript": "^5.4.3"
   }
 }

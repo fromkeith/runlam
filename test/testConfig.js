@@ -3,7 +3,7 @@ const {
     extractConfig,
     marshalFlags,
     parseRawFlags,
-} = require('../config');
+} = require('../dist/config');
 const microcli = require('microcli');
 const stringArgv = require('string-argv');
 

@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2022",
+        "noImplicitAny": true,
+        "module": "node16",
+        "sourceMap": false,
+        "outDir": "dist/",
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "node_modules/*",
+                "types/*"
+            ]
+        },
+        "lib": [
+            "ES2023"
+        ]
+    },
+    "include": [
+        "*.ts"
+    ]
+}
