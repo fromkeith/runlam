@@ -72,16 +72,65 @@ async function build(directory: string, opt: IConfigFlags, dirs: IDirsInfo): Pro
 
     // migrate to eslint
     try {
-        await fs.stat(path.join(dirs.cwd, '.eslintrc.js'));
+        await fs.stat(path.join(dirs.cwd, 'eslint.config.js'));
     } catch (ex) {
-        await fs.stat(path.join(dirs.cwd, 'tsconfig.json'));
-        run('npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-import@latest eslint-plugin-jsdoc@latest eslint-plugin-prefer-arrow@latest', {cwd: dirs.cwd});
-        run('npx tslint-to-eslint-config', {cwd: dirs.cwd});
+        run('npm install --save-dev eslint eslint typescript typescript-eslint', {cwd: dirs.cwd});
+        await fs.writeFile(path.join(dirs.cwd, 'eslint.config.js'), `import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    ignores: ['**/*.js', '**/.dist/**'],
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      quotes: ['error', 'single'],
+      '@typescript-eslint/no-unused-vars': [
+          "error",
+          { "vars": "all", "args": "none", "ignoreRestSiblings": false }
+      ]
+    },
+  }
+);
+
+`);
+        await fs.writeFile(path.join(dirs.cwd, 'tsconfig.json'), `{
+    "compilerOptions": {
+        "target": "ES2022",
+        "noImplicitAny": true,
+        "module": "node16",
+        "moduleResolution": "node16",
+        "sourceMap": false,
+        "outDir": "dist/",
+        "baseUrl": ".",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "paths": {
+            "*": [
+                "node_modules/*",
+                "types/*"
+            ]
+        },
+        "lib": [
+            "ES2023"
+        ]
+    },
+    "include": [
+        "*.ts", "*.d.ts"
+    ]
+}`);
     }
-    run(`npx eslint -c .eslintrc.js ${fix} **/*.ts`, {cwd: dirs.cwd});
-    run(`tsc -p tsconfig.json --outDir ${dirs.dest}`, {cwd: dirs.cwd});
-    run(`ncp ./package.json ${dirs.dest}/package.json`, {cwd: dirs.cwd});
-    run(`ncp ./package-lock.json ${dirs.dest}/package-lock.json`, {cwd: dirs.cwd});
+    run(`npm install --save-dev typescript@latest @types/node@${opt.nodeVersion}`, {cwd: dirs.cwd});
+    run(`npx eslint -c eslint.config.js ${fix} **/*.ts`, {cwd: dirs.cwd});
+    run(`npx tsc -p tsconfig.json --outDir ${dirs.dest}`, {cwd: dirs.cwd});
+    run(`npx ncp ./package.json ${dirs.dest}/package.json`, {cwd: dirs.cwd});
+    run(`npx ncp ./package-lock.json ${dirs.dest}/package-lock.json`, {cwd: dirs.cwd});
     run('npm install --only=production', {cwd: dirs.dest});
     // aws-sdk provided on instance
     // so save some zip space

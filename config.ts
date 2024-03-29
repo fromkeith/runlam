@@ -22,6 +22,7 @@ interface IBuildInfo {
     native?: string | boolean;
     arch?: string;
     node?: number;
+    lintFix?: boolean;
 }
 interface IAwsConfig {
     profile?: string;
@@ -140,6 +141,9 @@ export function extractConfig(config: IConfig, stage?: string): IConfigFlags {
         } else {
             flags.nodeVersion = 16; // default to 16 if not set
             logger.log("No `node` version set, defaulting to 16");
+        }
+        if (config.build.lintFix) {
+            flags.fix = true;
         }
     }
     if (stage) {

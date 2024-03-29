@@ -103,6 +103,9 @@ function extractConfig(config, stage) {
             flags.nodeVersion = 16; // default to 16 if not set
             common_1.logger.log("No `node` version set, defaulting to 16");
         }
+        if (config.build.lintFix) {
+            flags.fix = true;
+        }
     }
     if (stage) {
         return Object.assign(flags, extractConfig(config.stages[stage]));

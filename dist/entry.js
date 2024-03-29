@@ -30,10 +30,7 @@ const fs_1 = require("fs");
 function makeEntryPoint(entryPath) {
     const escaped = entryPath.replace(/\\/g, '/');
     return `
-const root = require('./${escaped}');
-module.exports.handler = (event, context, done) => {
-    return root.handler(event, context, done);
-};
+export {handler} from './${escaped}';
     `;
 }
 async function checkIfEntryFileNeeded(directory, destFolder, opt) {

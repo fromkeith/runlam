@@ -10,10 +10,7 @@ import type {IConfigFlags} from './config';
 function makeEntryPoint(entryPath: string) {
     const escaped = entryPath.replace(/\\/g, '/');
     return `
-const root = require('./${escaped}');
-module.exports.handler = (event, context, done) => {
-    return root.handler(event, context, done);
-};
+export {handler} from './${escaped}';
     `;
 }
 
