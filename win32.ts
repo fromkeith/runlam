@@ -48,9 +48,9 @@ export async function packageUp(directory: string, opt: IConfigFlags, originalFl
         if (opt.arch) {
             platformArch = `--platform ${opt.arch}`;
         }
-        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${platformArch} ${docker} bash -c "cd task && npm install -g https://github.com/fromkeith/runlam.git && runlam \\"${directory}\\" ${flags}"`);
+        run(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${platformArch} ${docker} bash -c "cd task && npm install -g github:fromkeith/runlam && runlam \\"${directory}\\" ${flags}"`);
     } else {
-        run(`bash -l -c "nvm use ${opt.nodeVersion} && npm install -g https://github.com/fromkeith/runlam.git && runlam \\"${directory}\\" ${flags}"`, {
+        run(`bash -l -c "nvm use ${opt.nodeVersion} && npm install -g github:fromkeith/runlam && runlam \\"${directory}\\" ${flags}"`, {
             env,
         });
     }
