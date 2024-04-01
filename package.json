@@ -11,6 +11,9 @@
   "bin": {
     "runlam": "bin/runlam.js"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "author": "fromkeith <foremery@gmail.com>",
   "license": "MIT",
   "dependencies": {
