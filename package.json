@@ -14,6 +14,10 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "files": [
+     "dist/**/*",
+     "bin/**/*"
+  ],
   "author": "fromkeith <foremery@gmail.com>",
   "license": "MIT",
   "dependencies": {
