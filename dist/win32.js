@@ -36,10 +36,10 @@ async function packageUp(directory, opt, originalFlags) {
         if (opt.arch) {
             platformArch = `--platform ${opt.arch}`;
         }
-        (0, runjs_1.run)(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${platformArch} ${docker} bash -c "cd task && npm install -g https://github.com/fromkeith/runlam.git && runlam \\"${directory}\\" ${flags}"`);
+        (0, runjs_1.run)(`docker run -v ${process.cwd()}:/task -it ${envFlags} ${platformArch} ${docker} bash -c ". /root/.bashrc && cd task && runlam \\"${directory}\\" ${flags}"`);
     }
     else {
-        (0, runjs_1.run)(`bash -l -c "nvm use ${opt.nodeVersion} && npm install -g https://github.com/fromkeith/runlam.git && runlam \\"${directory}\\" ${flags}"`, {
+        (0, runjs_1.run)(`bash -l -c "nvm use ${opt.nodeVersion} && npm update -g && runlam \\"${directory}\\" ${flags}"`, {
             env,
         });
     }
